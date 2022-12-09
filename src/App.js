@@ -2,12 +2,17 @@ import { useEffect } from "react";
 import Cart from "./components/Cart/Cart";
 import Layout from "./components/Layout/Layout";
 import Products from "./components/Shop/Products";
+import Notification from "./components/UI/Notifications";
 import { useSelector, useDispatch } from "react-redux";
 import { notificationActions } from "./store/slice/notificationSlice";
+import React from "react";
 
 function App() {
   const showCart = useSelector((state) => state.toggle.cartIsToggled);
   const cartData = useSelector((state) => state.cart);
+  const notificationStatus = useSelector(
+    (state) => state.notification.notification
+  );
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -49,10 +54,19 @@ function App() {
   }, [dispatch, cartData]);
 
   return (
-    <Layout>
-      {showCart && <Cart />}
-      <Products />
-    </Layout>
+    <React.Fragment>
+      {notificationStatus && (
+        <Notification
+          status={notificationStatus.status}
+          title={notificationStatus.title}
+          message={notificationStatus.message}
+        />
+      )}
+      <Layout>
+        {showCart && <Cart />}
+        <Products />
+      </Layout>
+    </React.Fragment>
   );
 }
 
