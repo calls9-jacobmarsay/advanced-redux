@@ -1,9 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { notificationActions } from "./notificationSlice";
 
 const cartSlice = createSlice({
   initialState: {
-    items: [],
     totalQuantity: 0,
+    items: [],
   },
   name: "cart",
   reducers: {
@@ -21,6 +22,7 @@ const cartSlice = createSlice({
         });
       } else {
         existingItem.quantity++;
+        console.log(existingItem.quantity);
         existingItem.totalPrice = existingItem.totalPrice + newItem.price;
       }
     },
@@ -30,20 +32,68 @@ const cartSlice = createSlice({
       const existingItem = state.items.find((item) => item.id === id);
       state.totalQuantity--;
 
-      // Added a boundary check
-      if (state.totalQuantity < 0) {
+      // Added a boundry check
+      if (state.totalQuantity > 0) {
+        return state.totalQuantity - 1;
+      } else {
         state.totalQuantity = 0;
-        console.log(state.totalQuantity);
       }
+
       if (existingItem.quantity === 0) {
         state.items.filter((item) => item.id !== id);
+        console.log("This is 0");
       } else {
         existingItem.quantity--;
+        console.log(existingItem.quantity);
         existingItem.totalPrice = existingItem.totalPrice - existingItem.price;
       }
     },
   },
 });
+
+export const sendItemData = (cartData) => {
+  return async (dispatch) => {
+    dispatch(
+      notificationActions.showNotification({
+        status: "pending",
+        title: "Sending...",
+        message: "Sending Cart Data!",
+      })
+    );
+
+    const sendRequest = async () => {
+      const response = await fetch(
+        "https://advanced-redux-b3904-default-rtdb.europe-west1.firebasedatabase.app/cart.json",
+        {
+          method: "PUT",
+          body: JSON.stringify(cartData),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Error: Data failed to send!");
+      }
+    };
+    try {
+      await sendRequest();
+
+      dispatch(
+        notificationActions.showNotification({
+          status: "success",
+          title: "Success",
+          message: "Successfully sent Data!",
+        })
+      );
+    } catch (error) {
+      dispatch(
+        notificationActions.showNotification({
+          status: "error",
+          title: "Error",
+          message: "Failed to send Data!",
+        })
+      );
+    }
+  };
+};
 
 export const cartActions = cartSlice.actions;
 export default cartSlice;
